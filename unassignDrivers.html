@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Scheduled Driver Unassign | Advantage One</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- MyGeotab strips style and link tags from add-in pages; js/styles.js injects the CSS and fonts -->
+</head>
+<body>
+<div id="unassignDrivers" class="a1ud">
+  <div class="a1ud-grid-backdrop" aria-hidden="true"></div>
+  <div class="a1ud-glow" aria-hidden="true"></div>
+
+  <div class="a1ud-wrap">
+    <header class="a1ud-header">
+      <img class="a1ud-logo" src="https://advantageone.tech/images/logo.png" alt="Advantage One" onerror="this.style.display='none'">
+      <span class="a1ud-badge"><span class="a1ud-dot"></span>MyGeotab Add-In</span>
+    </header>
+
+    <section class="a1ud-hero">
+      <span class="a1ud-eyebrow">Purpose-Engineered Automation</span>
+      <h1>Scheduled Driver Unassign</h1>
+      <p class="a1ud-lead">Reset every asset in your fleet to <strong>Unknown Driver</strong> at the time you set. Every shift starts clean, and no trips are credited to the wrong driver.</p>
+    </section>
+
+    <div id="a1ud-denied" class="a1ud-card a1ud-alert a1ud-hidden">
+      <svg class="a1ud-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+      <div>
+        <strong>Administrator access required.</strong>
+        This tool changes driver assignments across your whole database, so only users with Administrator clearance can use it.
+      </div>
+    </div>
+
+    <div id="a1ud-app" class="a1ud-hidden">
+
+      <!-- Status -->
+      <section class="a1ud-card a1ud-card-highlight">
+        <div class="a1ud-status-row">
+          <div>
+            <span class="a1ud-eyebrow">Next scheduled run</span>
+            <div id="a1ud-next" class="a1ud-big">Not scheduled</div>
+            <div id="a1ud-countdown" class="a1ud-stat"></div>
+          </div>
+          <div class="a1ud-pill" id="a1ud-state">Idle</div>
+        </div>
+        <div id="a1ud-lastresult" class="a1ud-lastresult"></div>
+        <div class="a1ud-warn">
+          <svg class="a1ud-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+          <div>
+            <strong>Keep this page open.</strong>
+            Scheduled runs happen only while at least one admin has this add-in open in a browser that is awake and signed in to MyGeotab.
+            If someone opens it within the grace window after the scheduled time, the run happens late. After that, the run is logged as <em>Missed</em>.
+          </div>
+        </div>
+        <label class="a1ud-check"><input type="checkbox" id="a1ud-wakelock"> Keep this computer's screen awake while this page is open</label>
+      </section>
+
+      <!-- Schedule -->
+      <section class="a1ud-card">
+        <div class="a1ud-card-head">
+          <span class="a1ud-icontile"><svg class="a1ud-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/></svg></span>
+          <div>
+            <span class="a1ud-eyebrow">Step 1</span>
+            <h2>Set your schedule</h2>
+          </div>
+        </div>
+        <div class="a1ud-form">
+          <label class="a1ud-check a1ud-span2"><input type="checkbox" id="a1ud-enabled"> Schedule enabled</label>
+
+          <label>Repeat
+            <select id="a1ud-mode">
+              <option value="daily">Every day</option>
+              <option value="weekly">Selected days</option>
+              <option value="once">One time</option>
+            </select>
+          </label>
+
+          <label>Time
+            <input type="time" id="a1ud-time" value="23:00" required>
+          </label>
+
+          <label id="a1ud-oncewrap" class="a1ud-hidden">Date
+            <input type="date" id="a1ud-oncedate">
+          </label>
+
+          <label>Time zone
+            <select id="a1ud-tz"></select>
+          </label>
+
+          <div id="a1ud-dayswrap" class="a1ud-span2 a1ud-hidden">
+            <div class="a1ud-label">Days</div>
+            <div class="a1ud-days" id="a1ud-days"></div>
+          </div>
+
+          <label>Assets in scope
+            <select id="a1ud-scope">
+              <option value="all">All assets</option>
+              <option value="groups">Selected groups only</option>
+            </select>
+          </label>
+
+          <label>Grace window (minutes)
+            <input type="number" id="a1ud-grace" min="0" max="720" value="15">
+          </label>
+
+          <div id="a1ud-groupswrap" class="a1ud-span2 a1ud-hidden">
+            <div class="a1ud-label">Groups <span class="a1ud-muted">(includes assets in any checked group)</span></div>
+            <input type="search" id="a1ud-groupfilter" placeholder="Filter groups">
+            <div class="a1ud-groups" id="a1ud-groups"></div>
+          </div>
+
+          <label class="a1ud-check a1ud-span2"><input type="checkbox" id="a1ud-skipdriving" checked> Skip assets that are driving at run time</label>
+        </div>
+        <div class="a1ud-actions">
+          <button class="a1ud-btn a1ud-primary" id="a1ud-save">Save Schedule <svg class="a1ud-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg></button>
+          <span id="a1ud-savemsg" class="a1ud-muted"></span>
+        </div>
+        <div id="a1ud-updated" class="a1ud-muted a1ud-small"></div>
+      </section>
+
+      <!-- Preview / manual -->
+      <section class="a1ud-card">
+        <div class="a1ud-card-head">
+          <span class="a1ud-icontile"><svg class="a1ud-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></span>
+          <div>
+            <span class="a1ud-eyebrow">Step 2</span>
+            <h2>Review current assignments</h2>
+          </div>
+        </div>
+        <p class="a1ud-muted">These assets in scope have a driver assigned right now.</p>
+        <div class="a1ud-actions">
+          <button class="a1ud-btn a1ud-secondary" id="a1ud-preview">Refresh List</button>
+          <button class="a1ud-btn a1ud-danger" id="a1ud-runnow">Unassign All Now</button>
+          <span id="a1ud-confirmwrap" class="a1ud-confirm a1ud-hidden">
+            <span id="a1ud-confirmtext"></span>
+            <button class="a1ud-btn a1ud-danger" id="a1ud-confirmyes">Yes, Unassign</button>
+            <button class="a1ud-btn a1ud-secondary" id="a1ud-confirmno">Cancel</button>
+          </span>
+        </div>
+        <div id="a1ud-previewmsg" class="a1ud-muted"></div>
+        <div class="a1ud-tablewrap">
+          <table class="a1ud-table" id="a1ud-previewtable">
+            <thead><tr><th>Asset</th><th>Driver</th><th>Assigned since</th><th>Driving</th><th>HOS login</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="a1ud-small a1ud-muted">
+          <strong>HOS login</strong> means the driver's latest Geotab Drive status in the last 24 hours is a login.
+          This tool doesn't change HOS logs. Those drivers need to log out in Geotab Drive.
+        </p>
+      </section>
+
+      <!-- History -->
+      <section class="a1ud-card">
+        <div class="a1ud-card-head">
+          <span class="a1ud-icontile"><svg class="a1ud-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg></span>
+          <div>
+            <span class="a1ud-eyebrow">Audit trail</span>
+            <h2>Run history</h2>
+          </div>
+        </div>
+        <div class="a1ud-tablewrap">
+          <table class="a1ud-table" id="a1ud-history">
+            <thead><tr><th>When</th><th>Trigger</th><th>By</th><th>Unassigned</th><th>Skipped</th><th>Failed / still assigned</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <div id="a1ud-loading" class="a1ud-card a1ud-muted">Loading…</div>
+
+    <footer class="a1ud-footer">
+      <div>
+        <strong>Fleet infrastructure, engineered around your operations.</strong>
+        <span>Geotab Elite Specialized Partner</span>
+      </div>
+      <div class="a1ud-footer-contact">
+        Need help? <a href="mailto:jordan@advtracking.net">jordan@advtracking.net</a> · <a href="tel:+15874095003">587-409-5003</a>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<script src="js/styles.js"></script>
+<script src="js/core.js"></script>
+<script src="js/unassignDrivers.js"></script>
+</body>
+</html>

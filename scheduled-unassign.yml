@@ -1,0 +1,47 @@
+name: Scheduled driver unassign
+
+on:
+  schedule:
+    - cron: "*/5 * * * *" # every 5 minutes (GitHub's shortest interval)
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "check = test sign-in and show the schedule (no changes). run-if-due = normal run."
+        type: choice
+        options: [check, run-if-due]
+        default: check
+
+permissions:
+  contents: read
+  actions: write # lets the keep-alive step below re-enable this schedule
+
+concurrency:
+  group: scheduled-unassign
+  cancel-in-progress: false
+
+jobs:
+  unassign:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run schedule
+        run: node scheduled-unassign.js
+        env:
+          GEOTAB_ACCOUNTS: ${{ secrets.GEOTAB_ACCOUNTS }}
+          MODE: ${{ inputs.mode || 'run-if-due' }}
+          RUN_ID: ${{ github.run_id }}
+
+      # GitHub pauses scheduled workflows in public repos after 60 days without
+      # repo activity. Re-enabling once a day keeps the schedule alive.
+      - name: Keep schedule active
+        if: always() && github.event_name == 'schedule'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$(date -u +%H)" = "12" ] && [ "$(date -u +%M)" -lt 10 ]; then
+            gh api -X PUT "repos/${{ github.repository }}/actions/workflows/scheduled-unassign.yml/enable"
+            echo "Schedule kept active."
+          fi

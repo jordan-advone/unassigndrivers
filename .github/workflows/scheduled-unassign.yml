@@ -1,8 +1,9 @@
 name: Scheduled driver unassign
 
+# Started every 45 minutes by an external scheduler (cron-job.org) through the
+# GitHub API, because GitHub's own schedule trigger is too unreliable.
+# Manual runs from the Actions tab default to "check" (no changes).
 on:
-  schedule:
-    - cron: "*/5 * * * *" # every 5 minutes (GitHub's shortest interval)
   workflow_dispatch:
     inputs:
       mode:
@@ -13,7 +14,6 @@ on:
 
 permissions:
   contents: read
-  actions: write # lets the keep-alive step below re-enable this schedule
 
 concurrency:
   group: scheduled-unassign
@@ -32,16 +32,3 @@ jobs:
           GEOTAB_ACCOUNTS: ${{ secrets.GEOTAB_ACCOUNTS }}
           MODE: ${{ inputs.mode || 'run-if-due' }}
           RUN_ID: ${{ github.run_id }}
-
-      # GitHub pauses scheduled workflows in public repos after 60 days without
-      # repo activity. Re-enabling once a day keeps the schedule alive.
-      - name: Keep schedule active
-        if: always() && github.event_name == 'schedule'
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if [ "$(date -u +%H)" = "12" ] && [ "$(date -u +%M)" -lt 10 ]; then
-            gh api -X PUT "repos/${{ github.repository }}/actions/workflows/scheduled-unassign.yml/enable"
-            echo "Schedule kept active."
-          fi
